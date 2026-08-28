@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Style Swipe - Authentication</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Google Identity Services SDK -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <!-- EmailJS SDK Integration -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            emailjs.init("YOUR_PUBLIC_KEY");
+        })();
+    </script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        body {
+            background-color: #f4f5f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .phone-container {
+            width: 380px;
+            height: 780px;
+            background: #ffffff;
+            border-radius: 40px;
+            border: 12px solid #000000;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .notch {
+            width: 140px;
+            height: 24px;
+            background: #000000;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-bottom-left-radius: 14px;
+            border-bottom-right-radius: 14px;
+            z-index: 100;
+        }
+
+        .auth-container {
+            width: 100%;
+            height: 100%;
+            padding: 36px 28px 24px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        .auth-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .back-btn {
+            align-self: flex-start;
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: #3b4b68;
+            cursor: pointer;
+            margin-top: 6px;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+
+        .back-btn:hover {
+            background-color: #f1f5f9;
+        }
+
+        .logo-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 4px;
+            margin-bottom: 10px;
+        }
+
+        .logo-img {
+            width: 160px;
+            height: 130px;
+            object-fit: contain;
+            margin-bottom: 4px;
+        }
+
+        .brand-name {
+            font-size: 26px;
+            font-weight: 700;
+            color: #3b4b68;
+            letter-spacing: 0.5px;
+            line-height: 1;
+        }
+
+        .page-title {
+            font-size: 48px;
+            font-weight: 600;
+            color: #3b4b68;
+            margin-top: 6px;
+            letter-spacing: -1px;
+        }
+
+        .section-header {
+            margin-top: 10px;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #3b4b68;
+            padding-bottom: 4px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 500;
+            color: #3b4b68;
+        }
+
+        .auth-form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .input-label {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 48px;
+            border: 3px solid #4cd3ca;
+            border-radius: 14px;
+            padding: 0 40px 0 16px;
+            font-size: 15px;
+            outline: none;
+            color: #1e293b;
+            background-color: #ffffff;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: #3abcb3;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 14px;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748b;
+            margin-top: -2px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            color: #52c4b9;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .btn-submit {
+            width: 100%;
+            height: 50px;
+            background-color: #52c4b9;
+            border: none;
+            border-radius: 14px;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 6px;
+            box-shadow: 0 4px 14px rgba(82, 196, 185, 0.3);
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        .feedback-message {
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            min-height: 16px;
+            margin-top: 2px;
+        }
+
+        .feedback-error { color: #ef4444; }
+        .feedback-success { color: #10b981; }
+
+        .divider {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            margin: 18px 0 14px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1.5px solid #1e293b;
+        }
+
+        .divider span {
+            padding: 0 16px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #3b4b68;
+        }
+
+        .social-section {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .btn-google {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #e2e8f0;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.1s;
+        }
+
+        .btn-google:active {
+            transform: scale(0.92);
+        }
+
+        .switch-auth-section {
+            margin-top: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .switch-text {
+            font-size: 15px;
+            font-weight: 600;
+            color: #3b4b68;
+        }
+
+        .btn-purple {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #9895ce;
+            color: #ffffff;
+            padding: 10px 32px;
+            border-radius: 14px;
+            border: none;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .btn-purple:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        <div class="notch"></div>
+
+        <div class="auth-container">
+            
+            <button type="button" class="back-btn" id="backBtn" style="display: none;" aria-label="Back to Log in">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+
+            <div class="logo-header" id="logoHeader">
+                <img src="images/logo.png" alt="Style Swipe Logo" class="logo-img">
+                <div class="brand-name">STYLE SWIPE</div>
+            </div>
+
+            <h1 class="page-title" id="pageTitle">Log in</h1>
+
+            <div class="section-header" id="sectionHeader" style="display: none;">
+                <span class="section-title" id="sectionTitle">Personal Information</span>
+            </div>
+
+            <form class="auth-form" id="authForm" onsubmit="return false;">
+                
+                <div class="input-group" id="nameGroup" style="display: none;">
+                    <label class="input-label" for="nameInput">Name</label>
+                    <div class="input-wrapper">
+                        <input type="text" class="form-input" id="nameInput" placeholder="Enter your name">
+                    </div>
+                </div>
+
+                <div class="input-group" id="emailGroup">
+                    <label class="input-label" for="emailInput">Email</label>
+                    <div class="input-wrapper">
+                        <input type="email" class="form-input" id="emailInput" placeholder="Enter your email" required>
+                    </div>
+                </div>
+
+                <div class="input-group" id="passwordGroup">
+                    <label class="input-label" for="passwordInput">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" class="form-input" id="passwordInput" placeholder="Enter your password" required>
+                        <i class="fa-solid fa-eye toggle-password" id="togglePassword"></i>
+                    </div>
+                </div>
+
+                <div class="input-group" id="codeGroup" style="display: none;">
+                    <label class="input-label" for="codeInput">Confirmation Code</label>
+                    <div class="input-wrapper">
+                        <input type="text" class="form-input" id="codeInput" placeholder="Enter 6-digit code" maxlength="6">
+                    </div>
+                </div>
+
+                <div class="form-options" id="optionsRow">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rememberMe"> Remember me
+                    </label>
+                    <a href="#" class="forgot-link">Forgot?</a>
+                </div>
+
+                <div class="feedback-message" id="feedbackMessage"></div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">Log in</button>
+            </form>
+
+            <div id="socialSection">
+                <div class="divider">
+                    <span>or</span>
+                </div>
+                <div class="social-section">
+                    <button type="button" class="btn-google" id="googleBtn" aria-label="Sign in with Google">
+                        <svg width="24" height="24" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.29v3.15C3.26 21.3 7.35 24 12 24z"/>
+                            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.29C.47 8.21 0 10.05 0 12s.47 3.79 1.29 5.42l3.99-3.15z"/>
+                            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.26 2.7 1.29 6.58l3.99 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="switch-auth-section" id="switchAuthSection">
+                <span class="switch-text" id="switchText">Don't have an account?</span>
+                <button type="button" class="btn-purple" id="toggleAuthBtn">Sign up</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Replace this with your Client ID from Google Cloud Console
+        const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+
+        let isSignUpMode = false;
+        let isAwaitingCode = false;
+        let generatedCode = "";
+        let pendingUser = null;
+        let tokenClient = null;
+
+        const backBtn = document.getElementById('backBtn');
+        const logoHeader = document.getElementById('logoHeader');
+        const pageTitle = document.getElementById('pageTitle');
+        const sectionHeader = document.getElementById('sectionHeader');
+        const sectionTitle = document.getElementById('sectionTitle');
+        const nameGroup = document.getElementById('nameGroup');
+        const emailGroup = document.getElementById('emailGroup');
+        const passwordGroup = document.getElementById('passwordGroup');
+        const codeGroup = document.getElementById('codeGroup');
+        const optionsRow = document.getElementById('optionsRow');
+        const socialSection = document.getElementById('socialSection');
+        const googleBtn = document.getElementById('googleBtn');
+        
+        const nameInput = document.getElementById('nameInput');
+        const emailInput = document.getElementById('emailInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const codeInput = document.getElementById('codeInput');
+        const rememberMe = document.getElementById('rememberMe');
+        const togglePassword = document.getElementById('togglePassword');
+        const submitBtn = document.getElementById('submitBtn');
+        const feedbackMessage = document.getElementById('feedbackMessage');
+        const switchText = document.getElementById('switchText');
+        const toggleAuthBtn = document.getElementById('toggleAuthBtn');
+
+        // Initialize Google OAuth client
+        window.addEventListener('load', () => {
+            if (window.google) {
+                tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: GOOGLE_CLIENT_ID,
+                    scope: 'email profile',
+                    callback: (response) => {
+                        if (response.access_token) {
+                            fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                                headers: { Authorization: `Bearer ${response.access_token}` }
+                            })
+                            .then(res => res.json())
+                            .then(userInfo => {
+                                showFeedback(`Signed in as ${userInfo.email}`, 'success');
+                                setTimeout(() => logUserIn(userInfo.email), 800);
+                            })
+                            .catch(() => showFeedback('Failed to retrieve user profile.', 'error'));
+                        }
+                    },
+                });
+            }
+        });
+
+        // Trigger Google Login Popup
+        googleBtn.addEventListener('click', () => {
+            if (tokenClient) {
+                tokenClient.requestAccessToken();
+            } else {
+                // Demo fallback if Google API Client ID is not configured
+                showFeedback('Simulating Google Sign-In...', 'success');
+                setTimeout(() => logUserIn('demo.user@gmail.com'), 1000);
+            }
+        });
+
+        togglePassword.addEventListener('click', () => {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            togglePassword.classList.toggle('fa-eye', !isPassword);
+            togglePassword.classList.toggle('fa-eye-slash', isPassword);
+        });
+
+        function switchToLogin() {
+            isSignUpMode = false;
+            resetVerificationState();
+
+            backBtn.style.display = 'none';
+            logoHeader.style.display = 'flex';
+            sectionHeader.style.display = 'none';
+            nameGroup.style.display = 'none';
+            emailGroup.style.display = 'flex';
+            passwordGroup.style.display = 'flex';
+            codeGroup.style.display = 'none';
+            optionsRow.style.display = 'flex';
+            socialSection.style.display = 'block';
+
+            pageTitle.textContent = 'Log in';
+            submitBtn.textContent = 'Log in';
+            switchText.textContent = "Don't have an account?";
+            toggleAuthBtn.textContent = 'Sign up';
+        }
+
+        backBtn.addEventListener('click', () => {
+            switchToLogin();
+        });
+
+        toggleAuthBtn.addEventListener('click', () => {
+            if (!isSignUpMode) {
+                isSignUpMode = true;
+                resetVerificationState();
+
+                backBtn.style.display = 'flex';
+                logoHeader.style.display = 'none';
+                sectionHeader.style.display = 'block';
+                sectionTitle.textContent = 'Personal Information';
+                nameGroup.style.display = 'flex';
+                emailGroup.style.display = 'flex';
+                passwordGroup.style.display = 'flex';
+                codeGroup.style.display = 'none';
+                optionsRow.style.display = 'none';
+                socialSection.style.display = 'none';
+
+                pageTitle.textContent = 'sign up';
+                submitBtn.textContent = 'Sign up';
+                switchText.textContent = 'Already have an account?';
+                toggleAuthBtn.textContent = 'Log in';
+            } else {
+                switchToLogin();
+            }
+        });
+
+        submitBtn.addEventListener('click', () => {
+            const email = emailInput.value.trim().toLowerCase();
+            const password = passwordInput.value;
+            const name = nameInput.value.trim();
+
+            if (isSignUpMode && isAwaitingCode) {
+                const enteredCode = codeInput.value.trim();
+                if (enteredCode === generatedCode) {
+                    const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+                    users.push(pendingUser);
+                    localStorage.setItem('registeredUsers', JSON.stringify(users));
+                    
+                    showFeedback('Email verified! Logging in...', 'success');
+                    setTimeout(() => logUserIn(pendingUser.email), 1000);
+                } else {
+                    showFeedback('Invalid confirmation code. Try again.', 'error');
+                }
+                return;
+            }
+
+            if (!email || !password || (isSignUpMode && !name)) {
+                showFeedback('Please fill out all fields.', 'error');
+                return;
+            }
+
+            const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+
+            if (isSignUpMode) {
+                const userExists = users.some(u => u.email === email);
+                if (userExists) {
+                    showFeedback('Account with this email already exists!', 'error');
+                    return;
+                }
+
+                pendingUser = { name, email, password };
+                generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+                showFeedback('Sending confirmation code...', 'success');
+
+                emailjs.send("service_88ob7p9", "YOUR_TEMPLATE_ID", {
+                    to_email: email,
+                    passcode: generatedCode
+                }).then(() => {
+                    showVerificationStep();
+                }).catch(() => {
+                    showFeedback(`Code sent to ${email} (Demo Code: ${generatedCode})`, 'success');
+                    showVerificationStep();
+                });
+
+            } else {
+                const userMatch = users.find(u => u.email === email && u.password === password);
+                if (userMatch) {
+                    showFeedback('Sign in successful!', 'success');
+                    setTimeout(() => logUserIn(email), 800);
+                } else {
+                    showFeedback('Invalid email or password.', 'error');
+                }
+            }
+        });
+
+        function showVerificationStep() {
+            isAwaitingCode = true;
+            backBtn.style.display = 'flex';
+            sectionTitle.textContent = 'Verify Email';
+            nameGroup.style.display = 'none';
+            emailGroup.style.display = 'none';
+            passwordGroup.style.display = 'none';
+            codeGroup.style.display = 'flex';
+            submitBtn.textContent = 'Verify Code';
+        }
+
+        function resetVerificationState() {
+            isAwaitingCode = false;
+            generatedCode = "";
+            pendingUser = null;
+            codeInput.value = '';
+            feedbackMessage.textContent = '';
+        }
+
+        function logUserIn(email) {
+            const sessionData = { email, loggedIn: true, time: Date.now() };
+            
+            if (rememberMe.checked) {
+                localStorage.setItem('currentUser', JSON.stringify(sessionData));
+            } else {
+                sessionStorage.setItem('currentUser', JSON.stringify(sessionData));
+            }
+
+            window.location.href = 'feed.html';
+        }
+
+        function showFeedback(text, type) {
+            feedbackMessage.textContent = text;
+            feedbackMessage.className = `feedback-message feedback-${type}`;
+        }
+    </script>
+</body>
+</html>
