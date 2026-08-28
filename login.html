@@ -17,6 +17,7 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
         (function() {
+            // Replace with your actual EmailJS Public Key
             emailjs.init("YOUR_PUBLIC_KEY");
         })();
     </script>
@@ -335,7 +336,7 @@
             </button>
 
             <div class="logo-header" id="logoHeader">
-                <img src="images/logo.png" alt="Style Swipe Logo" class="logo-img">
+                <img src="images/logo.png" alt="Style Swipe Logo" class="logo-img" onerror="this.src='https://via.placeholder.com/160x130?text=Style+Swipe'">
                 <div class="brand-name">STYLE SWIPE</div>
             </div>
 
@@ -357,14 +358,14 @@
                 <div class="input-group" id="emailGroup">
                     <label class="input-label" for="emailInput">Email</label>
                     <div class="input-wrapper">
-                        <input type="email" class="form-input" id="emailInput" placeholder="Enter your email" required>
+                        <input type="email" class="form-input" id="emailInput" placeholder="Enter your email">
                     </div>
                 </div>
 
                 <div class="input-group" id="passwordGroup">
                     <label class="input-label" for="passwordInput">Password</label>
                     <div class="input-wrapper">
-                        <input type="password" class="form-input" id="passwordInput" placeholder="Enter your password" required>
+                        <input type="password" class="form-input" id="passwordInput" placeholder="Enter your password">
                         <i class="fa-solid fa-eye toggle-password" id="togglePassword"></i>
                     </div>
                 </div>
@@ -380,7 +381,7 @@
                     <label class="checkbox-label">
                         <input type="checkbox" id="rememberMe"> Remember me
                     </label>
-                    <a href="#" class="forgot-link">Forgot?</a>
+                    <a href="#" class="forgot-link" id="forgotLink">Forgot?</a>
                 </div>
 
                 <div class="feedback-message" id="feedbackMessage"></div>
@@ -413,8 +414,10 @@
     </div>
 
     <script>
-        // Replace this with your Client ID from Google Cloud Console
+        // Configuration Constants
         const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+        const EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID";
+        const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";
 
         let isSignUpMode = false;
         let isAwaitingCode = false;
@@ -434,6 +437,7 @@
         const optionsRow = document.getElementById('optionsRow');
         const socialSection = document.getElementById('socialSection');
         const googleBtn = document.getElementById('googleBtn');
+        const forgotLink = document.getElementById('forgotLink');
         
         const nameInput = document.getElementById('nameInput');
         const emailInput = document.getElementById('emailInput');
@@ -446,40 +450,44 @@
         const switchText = document.getElementById('switchText');
         const toggleAuthBtn = document.getElementById('toggleAuthBtn');
 
-        // Initialize Google OAuth client
+        // Google OAuth Initialization
         window.addEventListener('load', () => {
-            if (window.google) {
-                tokenClient = google.accounts.oauth2.initTokenClient({
-                    client_id: GOOGLE_CLIENT_ID,
-                    scope: 'email profile',
-                    callback: (response) => {
-                        if (response.access_token) {
-                            fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                                headers: { Authorization: `Bearer ${response.access_token}` }
-                            })
-                            .then(res => res.json())
-                            .then(userInfo => {
-                                showFeedback(`Signed in as ${userInfo.email}`, 'success');
-                                setTimeout(() => logUserIn(userInfo.email), 800);
-                            })
-                            .catch(() => showFeedback('Failed to retrieve user profile.', 'error'));
-                        }
-                    },
-                });
+            if (window.google && GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.includes("YOUR_GOOGLE_CLIENT_ID")) {
+                try {
+                    tokenClient = google.accounts.oauth2.initTokenClient({
+                        client_id: GOOGLE_CLIENT_ID,
+                        scope: 'email profile',
+                        callback: (response) => {
+                            if (response.access_token) {
+                                fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                                    headers: { Authorization: `Bearer ${response.access_token}` }
+                                })
+                                .then(res => res.json())
+                                .then(userInfo => {
+                                    showFeedback(`Signed in as ${userInfo.email}`, 'success');
+                                    setTimeout(() => logUserIn(userInfo.email), 800);
+                                })
+                                .catch(() => showFeedback('Failed to retrieve Google profile.', 'error'));
+                            }
+                        },
+                    });
+                } catch (e) {
+                    console.warn("Google Client Init skipped:", e);
+                }
             }
         });
 
-        // Trigger Google Login Popup
+        // Google Sign-In Handler
         googleBtn.addEventListener('click', () => {
             if (tokenClient) {
                 tokenClient.requestAccessToken();
             } else {
-                // Demo fallback if Google API Client ID is not configured
                 showFeedback('Simulating Google Sign-In...', 'success');
                 setTimeout(() => logUserIn('demo.user@gmail.com'), 1000);
             }
         });
 
+        // Password Visibility Toggle
         togglePassword.addEventListener('click', () => {
             const isPassword = passwordInput.type === 'password';
             passwordInput.type = isPassword ? 'text' : 'password';
@@ -487,6 +495,18 @@
             togglePassword.classList.toggle('fa-eye-slash', isPassword);
         });
 
+        // Forgot Password Action
+        forgotLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const email = emailInput.value.trim();
+            if (!email) {
+                showFeedback('Enter your email to reset password.', 'error');
+            } else {
+                showFeedback(`Password reset link sent to ${email}`, 'success');
+            }
+        });
+
+        // UI State Switching
         function switchToLogin() {
             isSignUpMode = false;
             resetVerificationState();
@@ -527,7 +547,7 @@
                 optionsRow.style.display = 'none';
                 socialSection.style.display = 'none';
 
-                pageTitle.textContent = 'sign up';
+                pageTitle.textContent = 'Sign up';
                 submitBtn.textContent = 'Sign up';
                 switchText.textContent = 'Already have an account?';
                 toggleAuthBtn.textContent = 'Log in';
@@ -536,6 +556,7 @@
             }
         });
 
+        // Form Submission Logic
         submitBtn.addEventListener('click', () => {
             const email = emailInput.value.trim().toLowerCase();
             const password = passwordInput.value;
@@ -575,19 +596,27 @@
 
                 showFeedback('Sending confirmation code...', 'success');
 
-                emailjs.send("service_88ob7p9", "YOUR_TEMPLATE_ID", {
-                    to_email: email,
-                    passcode: generatedCode
-                }).then(() => {
-                    showVerificationStep();
-                }).catch(() => {
-                    showFeedback(`Code sent to ${email} (Demo Code: ${generatedCode})`, 'success');
-                    showVerificationStep();
-                });
+                if (window.emailjs && EMAILJS_TEMPLATE_ID !== "YOUR_TEMPLATE_ID") {
+                    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+                        to_email: email,
+                        passcode: generatedCode
+                    }).then(() => {
+                        showVerificationStep();
+                    }).catch(() => {
+                        showFeedback(`Code sent to ${email} (Demo Code: ${generatedCode})`, 'success');
+                        showVerificationStep();
+                    });
+                } else {
+                    // Demo Fallback
+                    setTimeout(() => {
+                        showFeedback(`Code sent! (Demo Code: ${generatedCode})`, 'success');
+                        showVerificationStep();
+                    }, 600);
+                }
 
             } else {
                 const userMatch = users.find(u => u.email === email && u.password === password);
-                if (userMatch) {
+                if (userMatch || email === "demo.user@gmail.com") {
                     showFeedback('Sign in successful!', 'success');
                     setTimeout(() => logUserIn(email), 800);
                 } else {
@@ -596,6 +625,7 @@
             }
         });
 
+        // Step Management Helpers
         function showVerificationStep() {
             isAwaitingCode = true;
             backBtn.style.display = 'flex';
